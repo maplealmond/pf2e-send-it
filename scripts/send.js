@@ -91,6 +91,20 @@ function buildRemappedTree(items, { senderId, recipientId, packageId, stripSendF
   });
 }
 
+async function addToActor(actor, itemData, qty) {
+  const existing = findStackMatch(actor, itemData);
+  if (existing) {
+    await existing.update({ "system.quantity": (existing.system.quantity ?? 0) + qty });
+    return existing;
+  }
+  const data = foundry.utils.deepClone(itemData);
+  if (data.system?.quantity != null) data.system.quantity = qty;
+  delete data._id;
+  delete data.flags?.[MODULE_ID];
+  const [created] = await actor.createEmbeddedDocuments("Item", [data]);
+  return created;
+}
+
 async function sendContainerPackage({ sourceContainer, recipientActor, stash }) {
   const sender = sourceContainer.actor;
   const descendants = collectContainerTree(sourceContainer, sender);
