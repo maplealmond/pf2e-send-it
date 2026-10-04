@@ -3,6 +3,7 @@ import {
   getStashActor,
   getItemFlag,
   isSendItem,
+  isStowedChildOnStash,
   userIsSender,
   userIsRecipient,
   userOwnsActor
@@ -84,11 +85,17 @@ export function registerStashSheetHook() {
 
     const isGM = game.user.isGM;
     const rows = root.querySelectorAll("[data-item-id]");
+    const seenItemIds = new Set();
 
     for (const row of rows) {
       const itemId = row.dataset.itemId;
       const item = stash.items.get(itemId);
       if (!item || !isSendItem(item)) continue;
+      if (seenItemIds.has(itemId)) {
+        row.classList.add("pf2e-send-it-hidden");
+        continue;
+      }
+      seenItemIds.add(itemId);
 
       const sender = !isGM && userIsSender(item);
       const recipient = !isGM && userIsRecipient(item);
@@ -123,8 +130,9 @@ export function registerStashSheetHook() {
       nameCell.appendChild(badge);
 
       const controls = row.querySelector(".item-controls") ?? nameCell;
+      const stowedChild = isStowedChildOnStash(item, stash);
 
-      if (recipient) {
+      if (recipient && !stowedChild) {
         const accept = document.createElement("a");
         accept.className = "pf2e-send-it-button pf2e-send-it-accept";
         accept.title = game.i18n.localize("PF2E_SEND_IT.AcceptTooltip");
@@ -138,7 +146,7 @@ export function registerStashSheetHook() {
         controls.prepend(accept);
       }
 
-      if (sender) {
+      if (sender && !stowedChild) {
         const cancel = document.createElement("a");
         cancel.className = "pf2e-send-it-button pf2e-send-it-cancel";
         cancel.title = game.i18n.localize("PF2E_SEND_IT.CancelSendTooltip");

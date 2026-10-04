@@ -5,7 +5,8 @@ export const FLAG = {
   RECIPIENT: "recipientId",
   STATUS: "status",
   SENT_AT: "sentAt",
-  COIN_PACKAGE: "coinPackage"
+  COIN_PACKAGE: "coinPackage",
+  PACKAGE_ID: "packageId"
 };
 
 export const COIN_DENOMS = ["pp", "gp", "sp", "cp"];

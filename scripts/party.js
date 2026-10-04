@@ -79,8 +79,19 @@ export function userIsRecipient(item, user = game.user) {
   return userOwnsActor(actor, user);
 }
 
+export function isStowedChildOnStash(item, stash = getStashActor()) {
+  const containerId = item.system?.containerId;
+  if (!stash || !containerId) return false;
+  const parent = stash.items.get(containerId);
+  return !!(parent && isSendItem(parent));
+}
+
 export function getPendingItemsForUser(user = game.user) {
   const stash = getStashActor();
   if (!stash) return [];
-  return stash.items.filter(item => isSendItem(item) && userIsRecipient(item, user));
+  return stash.items.filter(item =>
+    isSendItem(item) &&
+    userIsRecipient(item, user) &&
+    !isStowedChildOnStash(item, stash)
+  );
 }
