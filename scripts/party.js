@@ -22,19 +22,34 @@ function ownershipNeedsRepair(actor) {
   return false;
 }
 
-export async function ensurePartyOwnership() {
+async function grantPartyOwnership(party) {
+  const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
+  const update = { "ownership.default": OWNER };
+  for (const user of game.users) {
+    if (user.isGM) continue;
+    if (party.ownership?.[user.id] != null) {
+      update[`ownership.-=${user.id}`] = null;
+    }
+  }
+  await party.update(update);
+}
+
+export async function promptOwnershipRepair() {
   if (!game.user.isGM) return;
   const party = getStashActor();
   if (!party) return;
   if (!ownershipNeedsRepair(party)) return;
 
-  const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-  const ownership = foundry.utils.deepClone(party.ownership ?? {});
-  for (const user of game.users) {
-    if (user.isGM) continue;
-    ownership[user.id] = OWNER;
-  }
-  await party.update({ ownership });
+  const { DialogV2 } = foundry.applications.api;
+  await DialogV2.prompt({
+    window: { title: game.i18n.localize("PF2E_SEND_IT.OwnershipWarningTitle") },
+    content: `<p>${game.i18n.localize("PF2E_SEND_IT.OwnershipWarningBody")}</p>`,
+    ok: {
+      label: game.i18n.localize("PF2E_SEND_IT.OwnershipFixButton"),
+      callback: () => grantPartyOwnership(party)
+    },
+    rejectClose: false
+  });
 }
 
 export function getItemFlag(item, key) {

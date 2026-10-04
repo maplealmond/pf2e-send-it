@@ -1,5 +1,5 @@
 import { MODULE_ID } from "./constants.js";
-import { ensurePartyOwnership, getStashActor } from "./party.js";
+import { promptOwnershipRepair, getStashActor } from "./party.js";
 import { registerCharacterSheetHook, registerStashSheetHook } from "./sheet-hooks.js";
 import { registerCreateItemHook, showPendingOnReady } from "./notifications.js";
 
@@ -31,6 +31,6 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", async () => {
-  await ensurePartyOwnership();
+  await promptOwnershipRepair();
   showPendingOnReady();
 });
