@@ -10,13 +10,38 @@ async function removeFromSource(sourceItem, qty) {
   }
 }
 
-async function addToActor(actor, itemData, qty) {
-  const existing = actor.items.find(i =>
-    i.sourceId === itemData.flags?.core?.sourceId &&
-    i.name === itemData.name &&
-    !isSendItem(i)
+function sameItemIdentity(existing, incoming) {
+  const slugA = existing.system?.slug ?? null;
+  const slugB = incoming.system?.slug ?? null;
+  if (slugA && slugB) return slugA === slugB;
+  const srcA = existing.flags?.core?.sourceId ?? null;
+  const srcB = incoming.flags?.core?.sourceId ?? null;
+  if (srcA && srcB) return srcA === srcB;
+  return existing.name === incoming.name;
+}
+
+function findStackMatch(actor, itemData) {
+  return actor.items.find(i =>
+    !isSendItem(i) &&
+    i.system?.quantity != null &&
+    sameItemIdentity(i, itemData)
   );
-  if (existing && existing.system?.quantity != null) {
+}
+
+function findPendingSendStack(stash, senderId, recipientId, incoming) {
+  return stash.items.find(i =>
+    isSendItem(i) &&
+    i.getFlag(MODULE_ID, FLAG.SENDER) === senderId &&
+    i.getFlag(MODULE_ID, FLAG.RECIPIENT) === recipientId &&
+    i.getFlag(MODULE_ID, FLAG.STATUS) === STATUS.PENDING &&
+    i.system?.quantity != null &&
+    sameItemIdentity(i, incoming)
+  );
+}
+
+async function addToActor(actor, itemData, qty) {
+  const existing = findStackMatch(actor, itemData);
+  if (existing) {
     await existing.update({ "system.quantity": (existing.system.quantity ?? 0) + qty });
     return existing;
   }
@@ -51,14 +76,16 @@ export async function sendItem({ sourceItem, recipientActor, quantity }) {
     [FLAG.SENT_AT]: Date.now()
   };
 
-  await stash.createEmbeddedDocuments("Item", [itemData]);
+  const existingStack = findPendingSendStack(stash, sender.id, recipientActor.id, itemData);
+  if (existingStack) {
+    await existingStack.update({
+      "system.quantity": (existingStack.system.quantity ?? 0) + qty,
+      [`flags.${MODULE_ID}.${FLAG.SENT_AT}`]: Date.now()
+    });
+  } else {
+    await stash.createEmbeddedDocuments("Item", [itemData]);
+  }
   await removeFromSource(sourceItem, qty);
-
-  ui.notifications.info(game.i18n.format("PF2E_SEND_IT.SentToast", {
-    item: sourceItem.name,
-    qty,
-    recipient: recipientActor.name
-  }));
 }
 
 export async function acceptItem(partyItem) {
@@ -71,11 +98,6 @@ export async function acceptItem(partyItem) {
   const qty = data.system?.quantity ?? 1;
   await addToActor(recipient, data, qty);
   await partyItem.delete();
-
-  ui.notifications.info(game.i18n.format("PF2E_SEND_IT.AcceptedToast", {
-    item: partyItem.name,
-    qty
-  }));
 }
 
 export async function cancelItem(partyItem) {
@@ -88,26 +110,16 @@ export async function cancelItem(partyItem) {
   const qty = data.system?.quantity ?? 1;
   await addToActor(sender, data, qty);
   await partyItem.delete();
-
-  ui.notifications.info(game.i18n.format("PF2E_SEND_IT.CancelledToast", {
-    item: partyItem.name
-  }));
 }
 
 export async function rejectItem(partyItem) {
   if (!isSendItem(partyItem)) return;
   const senderId = getItemFlag(partyItem, FLAG.SENDER);
   const recipientId = getItemFlag(partyItem, FLAG.RECIPIENT);
-  const sender = game.actors.get(senderId);
   await partyItem.update({
     [`flags.${MODULE_ID}.${FLAG.SENDER}`]: recipientId,
     [`flags.${MODULE_ID}.${FLAG.RECIPIENT}`]: senderId,
     [`flags.${MODULE_ID}.${FLAG.STATUS}`]: STATUS.RETURNED,
     [`flags.${MODULE_ID}.${FLAG.SENT_AT}`]: Date.now()
   });
-
-  ui.notifications.info(game.i18n.format("PF2E_SEND_IT.RejectedToast", {
-    item: partyItem.name,
-    sender: sender?.name ?? "sender"
-  }));
 }

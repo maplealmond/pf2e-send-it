@@ -8,7 +8,7 @@ import {
   userOwnsActor
 } from "./party.js";
 import { showSendDialog } from "./dialogs.js";
-import { acceptItem, cancelItem, rejectItem } from "./send.js";
+import { acceptItem, cancelItem } from "./send.js";
 
 function toElement(html) {
   return html instanceof HTMLElement ? html : html?.[0];
@@ -64,8 +64,8 @@ export function registerStashSheetHook() {
       const item = stash.items.get(itemId);
       if (!item || !isSendItem(item)) continue;
 
-      const sender = userIsSender(item);
-      const recipient = userIsRecipient(item);
+      const sender = !isGM && userIsSender(item);
+      const recipient = !isGM && userIsRecipient(item);
 
       if (!isGM && !sender && !recipient) {
         row.classList.add("pf2e-send-it-hidden");
@@ -76,9 +76,15 @@ export function registerStashSheetHook() {
 
       const nameCell = row.querySelector(".item-name, .name, [data-tooltip-text], h4") ?? row;
       const status = getItemFlag(item, FLAG.STATUS);
+      const recipientActor = game.actors.get(getItemFlag(item, FLAG.RECIPIENT));
       const badge = document.createElement("span");
       badge.className = "pf2e-send-it-badge";
-      if (status === STATUS.RETURNED) {
+      if (isGM) {
+        badge.classList.add(status === STATUS.RETURNED ? "returned" : "for-you");
+        badge.textContent = game.i18n.format("PF2E_SEND_IT.ForCharacterBadge", {
+          name: recipientActor?.name ?? "?"
+        });
+      } else if (status === STATUS.RETURNED) {
         badge.classList.add("returned");
         badge.textContent = game.i18n.localize("PF2E_SEND_IT.ReturnedBadge");
       } else if (recipient) {
@@ -104,18 +110,6 @@ export function registerStashSheetHook() {
           await acceptItem(item);
         });
         controls.prepend(accept);
-
-        const reject = document.createElement("a");
-        reject.className = "pf2e-send-it-button pf2e-send-it-cancel";
-        reject.title = game.i18n.localize("PF2E_SEND_IT.RejectTooltip");
-        reject.setAttribute("data-tooltip", reject.title);
-        reject.innerHTML = `<i class="fa-solid fa-rotate-left"></i>`;
-        reject.addEventListener("click", async (ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          await rejectItem(item);
-        });
-        controls.prepend(reject);
       }
 
       if (sender) {

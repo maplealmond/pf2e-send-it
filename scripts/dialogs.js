@@ -1,4 +1,4 @@
-import { MODULE_ID, FLAG } from "./constants.js";
+import { MODULE_ID, FLAG, STATUS } from "./constants.js";
 import { getPartyMembers, getStashActor, getPendingItemsForUser } from "./party.js";
 import { sendItem, acceptItem, rejectItem } from "./send.js";
 
@@ -80,12 +80,16 @@ function buildRowsHTML(items) {
   return items.map(item => {
     const qty = item.system?.quantity ?? 1;
     const sender = game.actors.get(item.getFlag(MODULE_ID, FLAG.SENDER));
+    const returned = item.getFlag(MODULE_ID, FLAG.STATUS) === STATUS.RETURNED;
+    const metaLabel = returned
+      ? game.i18n.localize("PF2E_SEND_IT.RefusedByLabel")
+      : game.i18n.localize("PF2E_SEND_IT.FromLabel");
     return `
       <li data-item-id="${item.id}">
         <img class="item-img" src="${foundry.utils.escapeHTML(item.img)}" />
         <div class="item-info">
           <div class="item-name"><strong>${foundry.utils.escapeHTML(item.name)}</strong> ×${qty}</div>
-          <div class="item-meta">${game.i18n.localize("PF2E_SEND_IT.FromLabel")} ${foundry.utils.escapeHTML(sender?.name ?? "?")}</div>
+          <div class="item-meta">${metaLabel} ${foundry.utils.escapeHTML(sender?.name ?? "?")}</div>
         </div>
         <div class="item-actions">
           <button type="button" data-action="accept" data-item-id="${item.id}" data-tooltip="${game.i18n.localize("PF2E_SEND_IT.AcceptTooltip")}">
