@@ -65,7 +65,11 @@ function buildCoinData(denom, amt, senderId, recipientId) {
     name: meta.name,
     type: "equipment",
     img: meta.img,
-    system: { quantity: amt, description: { value: "" } },
+    system: {
+      quantity: amt,
+      price: { value: { [denom]: 1 }, per: 1 },
+      description: { value: "" }
+    },
     flags: {
       [MODULE_ID]: {
         [FLAG.SENDER]: senderId,
