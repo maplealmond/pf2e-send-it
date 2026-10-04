@@ -1,0 +1,40 @@
+{
+  "id": "pf2e-send-it",
+  "title": "PF2e Send It",
+  "description": "Lets players asynchronously send items to each other through the party stash, with no GM or socket relay required.",
+  "version": "#{VERSION}#",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system"
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "maplealmond",
+      "email": "maplealmond@gmail.com"
+    }
+  ],
+  "url": "https://github.com/maplealmond/pf2e-send-it",
+  "manifest": "#{MANIFEST}#",
+  "download": "#{DOWNLOAD}#",
+  "esmodules": [
+    "scripts/pf2e-send-it.js"
+  ],
+  "styles": [
+    "styles/pf2e-send-it.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ]
+}
