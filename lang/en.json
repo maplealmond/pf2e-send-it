@@ -1,5 +1,4 @@
 {
-  "PF2E_SEND_IT.SendTo": "Send To",
   "PF2E_SEND_IT.SendToTooltip": "Send this item to another party member",
   "PF2E_SEND_IT.SendCoinsTitle": "Send Coins",
   "PF2E_SEND_IT.SendCoinsTooltip": "Send currency to another party member",
@@ -12,7 +11,6 @@
   "PF2E_SEND_IT.PickRecipientPrompt": "Choose a recipient:",
   "PF2E_SEND_IT.QuantityLabel": "Quantity",
   "PF2E_SEND_IT.SendButton": "Send",
-  "PF2E_SEND_IT.CancelButton": "Cancel",
   "PF2E_SEND_IT.AcceptTooltip": "Accept this item into your inventory",
   "PF2E_SEND_IT.CancelSendTooltip": "Cancel this send and take the item back",
   "PF2E_SEND_IT.RejectTooltip": "Reject and return to sender",

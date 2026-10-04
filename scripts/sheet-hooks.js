@@ -31,7 +31,7 @@ export function registerCharacterSheetHook() {
       if (!item) continue;
       if (!item.isOfType?.("physical") && item.system?.quantity == null) continue;
 
-      const controls = row.querySelector(".item-controls") ?? row.querySelector(".item-controls-container");
+      const controls = row.querySelector(".item-controls");
       if (!controls) continue;
 
       const btn = document.createElement("a");
@@ -100,7 +100,7 @@ export function registerStashSheetHook() {
 
       if (row.querySelector(".pf2e-send-it-badge")) continue;
 
-      const nameCell = row.querySelector(".item-name, .name, [data-tooltip-text], h4") ?? row;
+      const nameCell = row.querySelector(".item-name") ?? row;
       const status = getItemFlag(item, FLAG.STATUS);
       const recipientActor = game.actors.get(getItemFlag(item, FLAG.RECIPIENT));
       const badge = document.createElement("span");
@@ -122,7 +122,7 @@ export function registerStashSheetHook() {
       }
       nameCell.appendChild(badge);
 
-      const controls = row.querySelector(".item-controls") ?? row.querySelector(".item-controls-container") ?? nameCell;
+      const controls = row.querySelector(".item-controls") ?? nameCell;
 
       if (recipient) {
         const accept = document.createElement("a");
@@ -157,7 +157,6 @@ export function registerStashSheetHook() {
   };
 
   Hooks.on("renderPartySheetPF2e", handler);
-  Hooks.on("renderPartySheetPf2e", handler);
 }
 
 function disableDistributeIfInTransit(root, stash) {

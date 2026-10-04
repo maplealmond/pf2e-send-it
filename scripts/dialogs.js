@@ -156,7 +156,7 @@ function buildRowsHTML(items) {
   }).join("");
 }
 
-export function closePendingDialog() {
+function closePendingDialog() {
   const d = activePendingDialog;
   activePendingDialog = null;
   if (d) {
