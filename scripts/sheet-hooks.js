@@ -7,8 +7,9 @@ import {
   userIsRecipient,
   userOwnsActor
 } from "./party.js";
-import { showSendDialog } from "./dialogs.js";
+import { showSendDialog, showCoinSendDialog } from "./dialogs.js";
 import { acceptItem, cancelItem } from "./send.js";
+import { hasInTransitCoins } from "./coins.js";
 
 function toElement(html) {
   return html instanceof HTMLElement ? html : html?.[0];
@@ -47,7 +48,32 @@ export function registerCharacterSheetHook() {
       });
       controls.prepend(btn);
     }
+
+    injectCoinSendButton(root, actor);
   });
+}
+
+function injectCoinSendButton(root, actor) {
+  if (root.querySelector(".pf2e-send-it-coins-button")) return;
+  const addCoinsBtn = root.querySelector('.coinage button[data-action="add-coins"]');
+  if (!addCoinsBtn) return;
+  const anchorLi = addCoinsBtn.closest("li");
+  const container = anchorLi?.parentElement;
+  if (!anchorLi || !container) return;
+
+  const li = document.createElement("li");
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "pf2e-send-it-coins-button";
+  btn.setAttribute("data-tooltip", game.i18n.localize("PF2E_SEND_IT.SendCoinsTooltip"));
+  btn.innerHTML = `<i class="fa-solid fa-paper-plane fa-fw"></i>`;
+  btn.addEventListener("click", async (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    await showCoinSendDialog(actor);
+  });
+  li.appendChild(btn);
+  container.insertBefore(li, anchorLi);
 }
 
 export function registerStashSheetHook() {
@@ -126,8 +152,19 @@ export function registerStashSheetHook() {
         controls.prepend(cancel);
       }
     }
+
+    disableDistributeIfInTransit(root, stash);
   };
 
   Hooks.on("renderPartySheetPF2e", handler);
   Hooks.on("renderPartySheetPf2e", handler);
+}
+
+function disableDistributeIfInTransit(root, stash) {
+  const btn = root.querySelector('button[data-action="distribute-coins"]');
+  if (!btn) return;
+  if (!hasInTransitCoins(stash)) return;
+  btn.disabled = true;
+  btn.classList.add("pf2e-send-it-distribute-disabled");
+  btn.setAttribute("data-tooltip", game.i18n.localize("PF2E_SEND_IT.DistributeDisabled"));
 }

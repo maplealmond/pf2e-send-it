@@ -1,5 +1,6 @@
 import { MODULE_ID, FLAG, STATUS } from "./constants.js";
 import { getStashActor, getItemFlag, isSendItem } from "./party.js";
+import { isCoinPackage, acceptCoinPackage, cancelCoinPackage } from "./coins.js";
 
 async function removeFromSource(sourceItem, qty) {
   const current = sourceItem.system?.quantity ?? 1;
@@ -28,7 +29,7 @@ function findStackMatch(actor, itemData) {
   );
 }
 
-function findPendingSendStack(stash, senderId, recipientId, incoming) {
+export function findPendingSendStack(stash, senderId, recipientId, incoming) {
   return stash.items.find(i =>
     isSendItem(i) &&
     i.getFlag(MODULE_ID, FLAG.SENDER) === senderId &&
@@ -90,6 +91,7 @@ export async function sendItem({ sourceItem, recipientActor, quantity }) {
 
 export async function acceptItem(partyItem) {
   if (!isSendItem(partyItem)) return;
+  if (isCoinPackage(partyItem)) return acceptCoinPackage(partyItem);
   const recipientId = getItemFlag(partyItem, FLAG.RECIPIENT);
   const recipient = game.actors.get(recipientId);
   if (!recipient) return;
@@ -102,6 +104,7 @@ export async function acceptItem(partyItem) {
 
 export async function cancelItem(partyItem) {
   if (!isSendItem(partyItem)) return;
+  if (isCoinPackage(partyItem)) return cancelCoinPackage(partyItem);
   const senderId = getItemFlag(partyItem, FLAG.SENDER);
   const sender = game.actors.get(senderId);
   if (!sender) return;

@@ -1,6 +1,7 @@
-import { MODULE_ID, FLAG, STATUS } from "./constants.js";
+import { MODULE_ID, FLAG, STATUS, COIN_DENOMS } from "./constants.js";
 import { getPartyMembers, getStashActor, getPendingItemsForUser } from "./party.js";
 import { sendItem, acceptItem, rejectItem } from "./send.js";
+import { sendCoinPackage, getActorCoins } from "./coins.js";
 
 const { DialogV2 } = foundry.applications.api;
 
@@ -68,6 +69,57 @@ export async function showSendDialog(sourceItem) {
         const recipient = game.actors.get(recipientId);
         if (!recipient) return;
         await sendItem({ sourceItem, recipientActor: recipient, quantity });
+      }
+    },
+    rejectClose: false
+  });
+}
+
+export async function showCoinSendDialog(senderActor) {
+  const candidates = getPartyMembers().filter(a => a.id !== senderActor?.id);
+  if (!candidates.length) {
+    ui.notifications.warn(game.i18n.localize("PF2E_SEND_IT.NoRecipients"));
+    return;
+  }
+
+  const have = getActorCoins(senderActor);
+  const options = candidates.map(a =>
+    `<option value="${a.id}">${foundry.utils.escapeHTML(a.name)}</option>`
+  ).join("");
+
+  const coinRows = COIN_DENOMS.map(d => `
+    <div class="form-group pf2e-send-it-coin-row">
+      <label>${d.toUpperCase()}
+        <span class="pf2e-send-it-coin-have">${game.i18n.format("PF2E_SEND_IT.CoinHaveLabel", { n: have[d] ?? 0 })}</span>
+      </label>
+      <input type="number" name="coin-${d}" min="0" max="${have[d] ?? 0}" step="1" />
+    </div>
+  `).join("");
+
+  const content = `
+    <form class="pf2e-send-it-dialog">
+      <div class="form-group">
+        <label>${game.i18n.localize("PF2E_SEND_IT.PickRecipientPrompt")}</label>
+        <select name="recipient">${options}</select>
+      </div>
+      ${coinRows}
+    </form>
+  `;
+
+  await DialogV2.prompt({
+    window: { title: game.i18n.localize("PF2E_SEND_IT.SendCoinsTitle") },
+    content,
+    ok: {
+      label: game.i18n.localize("PF2E_SEND_IT.SendButton"),
+      callback: async (_event, button) => {
+        const form = button.form;
+        const recipient = game.actors.get(form.elements.recipient.value);
+        if (!recipient) return;
+        const amounts = {};
+        for (const d of COIN_DENOMS) {
+          amounts[d] = form.elements[`coin-${d}`]?.value ?? "";
+        }
+        await sendCoinPackage({ senderActor, recipientActor: recipient, amounts });
       }
     },
     rejectClose: false

@@ -1,6 +1,13 @@
 {
   "PF2E_SEND_IT.SendTo": "Send To",
   "PF2E_SEND_IT.SendToTooltip": "Send this item to another party member",
+  "PF2E_SEND_IT.SendCoinsTitle": "Send Coins",
+  "PF2E_SEND_IT.SendCoinsTooltip": "Send currency to another party member",
+  "PF2E_SEND_IT.CoinHaveLabel": "(have {n})",
+  "PF2E_SEND_IT.CoinAtLeastOne": "Enter at least one coin amount.",
+  "PF2E_SEND_IT.CoinNotEnough": "You only have {have} {denom}.",
+  "PF2E_SEND_IT.CoinRemoveFailed": "Unable to withdraw coins from your inventory.",
+  "PF2E_SEND_IT.DistributeDisabled": "Distribute Coins is disabled while there are coins in transit through PF2e Send It. Resolve the pending coin sends first.",
   "PF2E_SEND_IT.PickRecipientTitle": "Send {item}",
   "PF2E_SEND_IT.PickRecipientPrompt": "Choose a recipient:",
   "PF2E_SEND_IT.QuantityLabel": "Quantity",
