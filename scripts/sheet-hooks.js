@@ -91,11 +91,6 @@ export function registerStashSheetHook() {
       const itemId = row.dataset.itemId;
       const item = stash.items.get(itemId);
       if (!item || !isSendItem(item)) continue;
-      if (seenItemIds.has(itemId)) {
-        row.classList.add("pf2e-send-it-hidden");
-        continue;
-      }
-      seenItemIds.add(itemId);
 
       const sender = !isGM && userIsSender(item);
       const recipient = !isGM && userIsRecipient(item);
@@ -106,6 +101,8 @@ export function registerStashSheetHook() {
       }
 
       if (row.querySelector(".pf2e-send-it-badge")) continue;
+      if (seenItemIds.has(itemId)) continue;
+      seenItemIds.add(itemId);
 
       const nameCell = row.querySelector(".item-name") ?? row;
       const status = getItemFlag(item, FLAG.STATUS);
